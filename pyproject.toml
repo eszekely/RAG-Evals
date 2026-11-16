@@ -1,0 +1,73 @@
+[project]
+name = "rag"
+version = "0.1.0"
+description = "Multilingual question answering over public PDF reports, with page-level citations."
+readme = "README.md"
+authors = [
+    { name = "Eniko Szekely", email = "szekely.eni@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.12",
+    # Pinned below 2.0: PyMuPDF 2.x pulls in a layout model + onnxruntime,
+    # which we don't need for plain text extraction.
+    "pymupdf>=1.26,<2",
+    "sentence-transformers>=3",
+    # Intel Macs only: the newest PyTorch there is 2.2.2, which needs numpy 1.x and
+    # does not work with transformers 5.x. Other platforms get current versions.
+    "numpy<2 ; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    # Linux (Docker, CI) gets numpy 2. Without this, uv would pick numpy 1.x for every
+    # platform, because one version that satisfies all platforms is its preference.
+    "numpy>=2 ; sys_platform == 'linux'",
+    "transformers<5 ; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "anthropic>=2.8.0",
+    "requests>=2.34.2",
+    "fastapi>=0.162.6",
+    "uvicorn[standard]>=0.54.0",
+    "prometheus-client>=0.26.0",
+    # Listed directly (it already comes with sentence-transformers) so that the
+    # source below can point it at the CPU-only wheels on Linux.
+    "torch",
+]
+
+[tool.uv]
+# PyTorch has no Intel-Mac wheels after 2.2.2. This makes uv also resolve a working
+# set of versions for Intel Macs, while other platforms get current versions.
+required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]
+
+# On Linux (Docker, CI), take torch from PyTorch's CPU-only index: the default PyPI
+# wheel bundles CUDA libraries (several GB) that a CPU-only service never uses.
+# `explicit` means only torch comes from this index; everything else from PyPI.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes basics, I: import sorting, B: common bugs, UP: modern syntax
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Lets tests import scripts/download.py as a plain module.
+pythonpath = ["scripts"]
+# Harmless warning emitted by PyMuPDF's SWIG bindings on import; not our code.
+filterwarnings = ["ignore:builtin type .* has no __module__ attribute:DeprecationWarning"]

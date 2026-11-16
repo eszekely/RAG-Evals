@@ -1,0 +1,46 @@
+# Runs on every push and pull request: lint, tests and a Docker build.
+# No secrets or data are needed: tests use a fake embedder and fake LLM, and the
+# image does not contain the index (it is mounted at runtime).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:  # a new push cancels the still-running check of the previous one
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.6"  # same as the Dockerfile
+          enable-cache: true
+      - name: Install dependencies (exactly as locked)
+        run: uv sync --frozen
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Tests
+        run: uv run pytest
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t rag:ci .
+      - name: Report image size
+        run: |
+          docker image inspect rag:ci --format 'Image size: {{.Size}} bytes'

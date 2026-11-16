@@ -1,0 +1,8 @@
+# Allow-list: send only what the build needs. Everything else (data/raw PDFs,
+# data/processed index, .env, keys, .venv, tests) never reaches the build context.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src/
+**/__pycache__

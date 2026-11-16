@@ -1,0 +1,31 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Data: never commit source PDFs or generated artefacts
+data/raw/
+data/processed/
+eval/
+# Plain-text export of the reports (copyrighted): listed explicitly so it stays
+# ignored even if the data/processed/ rule above is ever narrowed.
+data/processed/text/
+*.pdf
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Evaluation: judge tasks contain report text
+eval/judge_tasks.jsonl

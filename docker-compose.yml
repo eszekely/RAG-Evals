@@ -1,0 +1,20 @@
+services:
+  rag:
+    build: .
+    image: rag:latest
+    ports:
+      - "8000:8000"
+    # Secrets and settings come from .env at runtime; they are never in the image.
+    env_file: .env
+    environment:
+      RAG_INDEX_DIR: /app/data/processed/index
+      # Reach an Ollama server running on the host machine (Docker Desktop).
+      RAG_OLLAMA_URL: http://host.docker.internal:11434
+    volumes:
+      # The index contains text from copyrighted reports: mounted read-only, not baked in.
+      - ./data/processed:/app/data/processed:ro
+      # Embedding model cache survives container restarts (downloaded once).
+      - hf-cache:/home/app/.cache/huggingface
+
+volumes:
+  hf-cache:

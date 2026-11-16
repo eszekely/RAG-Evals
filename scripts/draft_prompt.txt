@@ -1,0 +1,34 @@
+Task: draft evaluation questions for a retrieval system. Do NOT modify any code or
+existing file. Only create the output file below.
+
+Read data/processed/pages.jsonl (one JSON object per line; fields: doc, page,
+page_label, text). Work ONLY on doc = "{FILENAME}", pages {A} to {B} (the "page"
+field, which is the PDF page index). Read only those pages, e.g. with a short
+read-only command that filters the file by doc and page.
+
+Write 10 question-answer pairs as JSON lines with exactly these fields:
+id, question, language, type, gold_docs, gold_pages, answer, evidence_snippet,
+author, verified, split.
+
+- id: "d{YEAR}-p{A}-01" to "d{YEAR}-p{A}-10"
+- language: "en"
+- type: one of "single_fact", "number", "table", "multi_hop"
+- gold_docs: ["{FILENAME}"]
+- gold_pages: list of the page numbers (the "page" field) where the answer is
+- answer: short
+- evidence_snippet: an EXACT quote of at most 25 words copied from the text of a gold page
+- author: "llm", verified: false, split: null
+
+Rules:
+- Use only the text of these pages. No general knowledge. Each question must be
+  unanswerable without this document; name the report year where needed, because
+  four editions of this report exist with similar content.
+- Do not name the table or figure in the question ("According to Table A.5" etc.);
+  ask as a real user would.
+- At least 3 questions about a number in a table, figure caption or key-message box.
+- Spread the questions over different pages; skip pages that are only references,
+  contents or acknowledgements.
+- If the pages cannot support 10 good questions, write fewer and say why.
+
+Save to eval/drafts/{STEM}_pp{A}-{B}_{MODEL}_{DATE}.jsonl exactly as generated, one JSON
+object per line. Then list the questions briefly. Do not run any other checks.
