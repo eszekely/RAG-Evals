@@ -11,7 +11,7 @@ build/
 # Data: never commit source PDFs or generated artefacts
 data/raw/
 data/processed/
-eval/
+/eval/
 # Plain-text export of the reports (copyrighted): listed explicitly so it stays
 # ignored even if the data/processed/ rule above is ever narrowed.
 data/processed/text/
